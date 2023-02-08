@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb  8 16:20:06 2023
+sdf
+@author: mrkure
+"""
+# LPARAM refers to a LONG_PTR  32 bit int and WPARAM refers to a UINT_PTR 64 bit unsigned int
+
+import win32api, time
+import win32con
+import ctypes
+from ctypes import windll, CFUNCTYPE, c_int, c_void_p
+
+# ctypes.windll.use 
+
+user32 = ctypes.windll.user32
+kernel32 = ctypes.windll.kernel32
+user32.CallNextHookEx.argtypes = [ctypes.wintypes.HHOOK,c_int, ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+
+ 
+
+def LowLevelMouseProcaa(nCode, wParam, lParam):
+    if wParam == win32con.WM_MOUSEWHEEL:
+        print("mousewheel triggerd!")
+    return
+    # return user32.CallNextHookEx(hook_id, nCode, wParam, lParam)
+
+ 
+
+if __name__ == '__main__':
+    
+    CMPFUNC = CFUNCTYPE(c_void_p, c_int, ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM)
+    pointer = CMPFUNC(LowLevelMouseProcaa)
+        
+    user32.SetWindowsHookExW.argtypes = [c_int,                 CMPFUNC,   ctypes.wintypes.HINSTANCE,      ctypes.wintypes.DWORD]
+    
+    
+    hook_id = user32.SetWindowsHookExW(  win32con.WH_MOUSE_LL,  pointer,  win32api.GetModuleHandle(None),  0                     )
+    
+    msg = ctypes.wintypes.MSG()
+    # while True:
+    #     time.sleep(1)
+    while user32.GetMessageW(ctypes.byref(msg), 0, 0, 0) != 0:
+        user32.TranslateMessage(msg)
+        user32.DispatchMessageW(msg)
